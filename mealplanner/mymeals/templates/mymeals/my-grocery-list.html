@@ -1,0 +1,231 @@
+{% extends "mymeals/layout.html" %}
+
+{% block title %}My Grocery List{% endblock %}
+
+{% block content %}
+<div class="container bg-light my-4 py-3 rounded">
+    <div class="row">
+      
+        <h1 class="text-center display-4">{{ my_list.nickname }}</h1>
+        <p class="text-center fs-3">Manually add items to your list</h1>
+        <div class="row justify-content-center">
+          <div class="col col-md-9 col-lg-7">
+          <form action="" method="post" >
+            {% csrf_token %}
+            <div class="input-group">
+              <div class="col-8">
+              {{ form.ingredient }}
+              </div>
+              <div class="col-4">
+                {{ form.quantity }}
+              </div>  
+            </div>
+            <div class="d-flex justify-content-center mt-2">
+              <button class="btn btn-primary" type="submit">Add to list</button>
+            </div>
+          </form>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col text-center">
+            <p class="fs-5 mt-2">Or, add ingredients from recipes database <a href="{% url 'recipes' %}">(Search Recipes)</a></p>
+          </div>
+        </div>
+      
+    </div>
+    
+    
+    {% if ingredients %}
+    <div class="row">
+      <div class="my-list col-lg-9 col-xl-8  mx-auto">
+        <div class="row">
+          <div class="col">
+            <h3 class="mt-3 display-6">My Items</h3>
+          </div>
+          <div class="col dropend d-flex justify-content-end">
+         
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              SORT BY
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+              <li><a class="dropdown-item" href="{% url 'my-grocery-list' my_list.id 'az' %}">A-Z</a></li>
+              <li><a class="dropdown-item" href="{% url 'my-grocery-list' my_list.id 'recipe' %}">Recipe</a></li>
+            </ul>
+          </div>
+          
+        </div>
+      {% for my_ingredient in ingredients %}
+      <div class="row align-items-center border rounded-3 mt-1 p-1 bg-light">
+        <div class="col-1">
+          <input class="form-check-input" type="checkbox">  <!-- not meant to be submitted, just for user to check off items in store -->
+        </div>
+        <div class="col-8">
+          <div id="my-ingredient-display{{my_ingredient.pk}}" class="my-ingredient-display fs-5">
+            {{ my_ingredient.ingredient.name }} x {{ my_ingredient.quantity }} {% if my_ingredient.recipe %}<span class="badge bg-info mx-2">for {{ my_ingredient.recipe}}</span>{% endif %}
+          </div>
+
+          <form id="edit-my-ingredient-form{{my_ingredient.pk}}" class="editable-list-ingredient fs-5" data-url="{% url 'my-grocery-list-ingredient-update' my_ingredient.pk %}">  
+            <input type="text" name="ingredient" maxlength="60" required="" value="{{ my_ingredient.ingredient.name }}">     
+            <input type="number" name="quantity" min="1" required="" value="{{ my_ingredient.quantity }}" style="width: 4em">
+            <input class="btn btn-primary" type="submit" value="Save">
+            <p id="my-ingredient-ingredientfield-error{{my_ingredient.pk}}" class="form-error"></p>
+            <p id="my-ingredient-quantityfield-error{{my_ingredient.pk}}" class="form-error"></p>
+          </form>
+        </div>
+  
+        <div class="col-3">
+          <div class="d-flex justify-content-end">
+            <button data-my-ingredient-pk="{{my_ingredient.pk}}" class="edit-button btn btn-warning"><span class="material-icons">
+              edit
+              </span></button>
+            
+            <button id="cancel-my-ingredient-form{{my_ingredient.pk}}" class="cancel-my-ingedient-button btn btn-secondary">Cancel</button>
+            <form id="delete-my-ingredient-form{{my_ingredient.pk}}" action="{% url 'my-grocery-list-ingredient-remove' my_ingredient.id %}" class="delete-my-list-ingredient" method='post'>
+              {% csrf_token %}
+              <button class="btn btn-danger" type='submit'><span class="material-icons">
+                delete
+                </span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+      </div>
+    </div> 
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  document.querySelectorAll('.edit-button').forEach(function(button) {
+    button.onclick = function() {
+      // Hide the edit button after click event
+      const editBtn = this;
+      editBtn.style.display = 'none';
+
+      // Create variables for each element of this ingredient instance
+      const pk = this.dataset.myIngredientPk
+      const deleteBtn = document.querySelector("#delete-my-ingredient-form" + pk)
+      const cancelBtn = document.querySelector("#cancel-my-ingredient-form" + pk)
+      const ingredientDisplay = document.querySelector("#my-ingredient-display" + pk)
+      const editForm = document.querySelector("#edit-my-ingredient-form" + pk)
+      const ingredientFieldError = document.querySelector("#my-ingredient-ingredientfield-error" + pk)
+      const quantityFieldError = document.querySelector("#my-ingredient-quantityfield-error" + pk)
+
+      // Add an event listener for the edit form
+      editForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        ingredientInput = this["ingredient"]
+        quantityInput = this["quantity"]
+   
+        data = new FormData(editForm); 
+        
+        // save values to reference later if the post request is successful
+        for (const entry of data.entries()){
+          console.log(entry[0] + ", " + entry[1]);
+        }
+        const url = this.dataset.url
+
+        // Call get cookie function and store csrf token in variable to send in post request
+        const csrftoken = getCookie('csrftoken');
+        fetch(url, {
+            method: 'POST',
+            body: data,
+            headers: { "X-CSRFToken": csrftoken }
+        })
+        .then(response => {
+          if (!response.ok){
+            console.log("there were errors in form submission")
+            throw response
+          } else {
+            return response.json()
+          }
+        })
+        .then(data => {
+              //if success:
+              // update the ingredientdisplay element with the new form values (use the js FormData values)
+              // hide/display the fields as required
+              console.log("in success block")
+              console.log(data.message)
+              ingredientDisplay.textContent = `${ingredientInput.value} x ${quantityInput.value}`;
+              deleteBtn.style.display = "inline";
+              ingredientDisplay.style.display = 'block';
+              cancelBtn.style.display = 'none';
+              editForm.style.display = 'none';
+              editBtn.style.display = 'inline';
+            
+          })
+        .catch(error => {
+          // If error code is 400, then display the form errors 
+              if(error.status === 400){
+                error.json().then(jsonError => {
+                  let formErrors = JSON.parse(jsonError.errors)
+                  console.log(formErrors)
+                  for (const key in formErrors){
+                    console.log(key)
+                    if (key == "ingredient"){
+                      // replace contents of the ingredient error div element
+                      // You’ll want to be sure to escape the results on the client-side to avoid the possibility of a cross-site scripting attack
+                      // Use element.textContent = errorText or with jQuery’s $(el).text(errorText) (rather than its .html() function).
+                      
+                      let ingedientMessage = formErrors[key][0]["message"]
+                      console.log(ingedientMessage)
+                      ingredientFieldError.textContent = ingedientMessage
+                    } else if(key == "quantity"){
+                      // replace contents of the quantity error div element
+                      let quantityMessage = formErrors[key][0]["message"]
+                      console.log(quantityMessage)
+                      quantityFieldError.textContent = quantityMessage;
+                    }
+                  }
+                })
+              } else {
+                console.log(error)
+              }
+          })
+      })
+
+      
+
+      // Since edit button was clicked, hide the delete and ingredient display
+      deleteBtn.style.display = "none";
+      ingredientDisplay.style.display = 'none';
+      cancelBtn.style.display = 'inline';
+      editForm.style.display = 'block';
+
+      // Add onclick event listeners
+      cancelBtn.onclick = function() {
+        deleteBtn.style.display = "inline";
+        ingredientDisplay.style.display = 'block';
+        cancelBtn.style.display = 'none';
+        editForm.style.display = 'none';
+        editBtn.style.display = 'inline';
+      }
+
+    }
+  })
+
+  // Define Get cookie function
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              // Does this cookie string begin with the name we want?
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+});
+</script>
+{% endblock %}

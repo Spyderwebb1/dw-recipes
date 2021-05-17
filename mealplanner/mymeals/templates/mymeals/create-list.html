@@ -1,0 +1,38 @@
+{% extends "mymeals/layout.html" %}
+
+{% block title %}Lists{% endblock %}
+
+{% block content %}
+<div class="container bg-light mt-5 rounded">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 text-center">
+            <h1 class="display-4 my-4">Lists</h1>
+            <form action="" method='post'>
+                {% csrf_token %}
+                {{ form.nickname }}
+                <br>
+                <input class="btn btn-primary" type="submit" value="Create new list">
+            </form>
+
+            {% if my_lists %}
+            <h5 class="mt-4">Or, use one of your previous lists...</h5>
+            <table class="table table-striped text-center">
+                <tbody>
+                    {% if my_lists %}
+                    {% for list in my_lists %}
+                    <tr>
+                        <td class="fs-5"><a href="{{ list.get_absolute_url }}">{{list.nickname}}</a></td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td>You do not have any saved lists.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            {% endif %}             
+      </div>
+    </div>
+</div>
+{% endblock content %}

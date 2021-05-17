@@ -1,0 +1,25 @@
+body {
+    background-image: url("images/background-burger.jpg");
+    height: 100vh;
+    background-size: cover;
+}
+
+.editable-list-ingredient, .cancel-my-ingedient-button {
+    display: none;
+}
+
+.edit-button, .delete-my-list-ingredient {
+    display: inline;
+}
+
+.errorlist {
+    color: red;
+    font-weight: bold;
+}
+
+#id_ingredients, .messages  {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+

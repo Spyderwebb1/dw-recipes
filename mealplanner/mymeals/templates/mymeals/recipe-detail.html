@@ -1,0 +1,82 @@
+{% extends "mymeals/layout.html" %}
+
+{% block title %}Recipe Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-5 py-3 bg-light rounded">
+  <div class="row text-center mb-4">
+    <div class="col">
+      <h1>{{ recipe.title }}</h1>
+      <h4>Category: {{ recipe.category.name }}</h4>
+      <h4>by: {{ recipe.author.username }}</h4>
+      <h4>Serves: {{ recipe.serves }}</h4>
+      {% if recipe in user.favorite_recipes.all %}
+      <form method="post" action="{% url 'recipes-remove-from-favorites' recipe.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning">Remove from Favorites</button>
+      </form>
+        {% else %}
+      <form method="post" action="{% url 'recipes-add-to-favorites' recipe.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Add to Favorites</button>
+      {% endif %}
+      </form>
+    </div>
+  </div>
+  {% if recipe.photo %}
+  <div class="row justify-content-center mb-4">
+    <div class="col-md-6">
+      <img src="{{ recipe.photo.url }}" class="img-fluid">
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="row">
+      <div class="col-md-5 col-lg-4 mb-4">
+        
+        <form method="post">
+          {% csrf_token %}
+          <label class="form-label display-6" for="{{ form.ingredients.auto_id }}">{{ form.ingredients.label}}</label>
+          {% if form.errors %}
+            {% for field in form %}
+              {{field.errors}}
+            {% endfor %}
+          {% endif %}
+
+          {% for ingredient in form.ingredients %}
+          <div class="form-check">
+            <label for="{{ ingredient.id_for_label }}" class="form-check-label">
+              {{ ingredient.tag }}
+              {{ ingredient.choice_label }}
+            </label>
+          </div>
+          {% endfor %}
+          <br>
+          {{ form.grocery_lists }}
+  
+          <a class="" href="{% url 'create-list' %}">Or, create a new list...</a>
+          <br>
+          <input class="btn btn-primary" type="submit" value="Add To Grocery List">
+        </form>   
+      </div>
+
+      <div class="col-md-7 col-lg-8">
+        <h4 class="display-6">Recipe Instructions</h4>
+        <ol>
+          {% for instruction in recipe.recipe_instructions.all %}
+            <li>{{ instruction.recipe_instruction }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+    </div> 
+    {% if recipe.author == user %}
+    <div class="d-grid gap-2 col-6 mx-auto mt-5">
+      <a class="btn btn-warning" href="{% url 'recipe-update' recipe.id %}" role="button">Edit Recipe</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}

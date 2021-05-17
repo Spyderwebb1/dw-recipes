@@ -1,0 +1,38 @@
+{% extends "mymeals/layout.html" %}
+
+{% block title %}Recipes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 text-center bg-light m-3 rounded">
+        <h1 class="display-4 text-center mb-3">Recipes</h1>
+        <a class="btn btn-primary my-1" href="{% url 'create-recipe' %}">Create your own recipe</a>
+        <hr class="my-4">
+        <p class="text-center fs-3 mb-4">Or choose from the selections below...</p>
+      </div> 
+    </div>
+
+    <div class="row justify-content-center">
+      {% for category in categories %}
+        <div class="col-md-6 col-lg-4 col-xl-3">
+          <div class="card text-center mb-3 mx-2">
+            <div class="card-body">
+          <h2 class="card-title">{{category.name}}</h2>
+          <hr class="my-2">
+        {% if category.recipe_set.all %}
+          {% for recipe in category.recipe_set.all %}         
+          <a href="{% url 'recipe-detail' recipe.id %}" class="btn btn-outline-primary my-1">{{ recipe.title }}</a>
+          <br>
+          {% endfor %}
+          {% else %}
+          <p class="fs-5">There are no recipes available in this category.</p>
+        {% endif %}
+        </div>
+      </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+</div>
+{% endblock content %}

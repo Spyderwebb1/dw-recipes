@@ -1,0 +1,28 @@
+{% extends "mymeals/layout.html" %}
+
+{% block title %}My Favorite Recipes{% endblock %}
+
+{% block content %}
+<div class="container bg-light my-4">
+    <h1 class="display-4 text-center mb-3">My Favorite Recipes</h1>
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <table class="table table-striped text-center">
+                <tbody>
+                    {% if recipes %}
+                    {% for recipe in recipes %}
+                    <tr>
+                        <td><a href="{% url 'recipe-detail' recipe.id %}">{{recipe.title}}</a></td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td>You have not added any recipes to your favorites.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

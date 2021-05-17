@@ -1,0 +1,163 @@
+{% extends "mymeals/layout.html" %}
+
+{% block title %}Edit Recipe{% endblock %}
+
+{% block content %}
+<div class="container mt-5 py-3 bg-light rounded">
+  <h1 class="display-4 text-center mb-3">Edit Recipe</h1>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% for field in recipe_form %}
+          <div class="mb-3">
+            {{ field.errors }}
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}:</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+
+          <div class="mb-3">
+            <p>Instructions:</p>
+            <ol id="instructions-list">
+              {% for form in instruction_form %}
+              <li class="mb-1">
+                <div class="row">
+                  <div class="col">
+                    {{ form.instruction }}
+                  </div>
+                  <div class="col-auto">
+                    <button type="button" class="delete-instruction btn btn-danger">delete</button>
+                  </div>
+                </div>
+              </li>
+              {% endfor %}
+            </ol>
+            <button type="button" id="add-step">Add Step</button>
+
+          </div>
+
+          <p>Ingredients:</p>
+          <div id="ingredient-list">
+            {% for form in recipe_ingredient_form %}
+            <div class="ingredient row mb-2">
+              <div class="col">
+                {{ form.ingredient }}
+                {{ form.ingredient.errors }}
+              </div>
+              <div class="col">
+                {{ form.quantity }}
+                {{ form.quantity.errors }}
+              </div>
+              <div class="col">
+                <button type="button" class="btn btn-danger delete-recipe-ingredient">Delete</button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" id="add-recipe-ingredient">Add another ingredient</button>
+          <br>
+          
+          <div class="d-grid gap-2 col-6 mx-auto mt-3">
+            <button class="btn btn-success" type="submit">Save Recipe</button>
+          </div>
+        </form>
+        <div class="d-grid gap-2 col-6 mx-auto mt-3">
+            <a href="{% url 'recipe-update' recipe.id %}" class="btn btn-warning">Undo Changes/Restart edit process</a>
+        </div>
+      </div>
+    </div> 
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+
+    /* INGREDIENTS INPUT FUNCTIONALITY */
+
+    let addRecipeIngredientBtn = document.getElementById("add-recipe-ingredient")
+    let ingredientList = document.getElementById("ingredient-list")
+
+    addRecipeIngredientBtn.addEventListener('click', function() {
+      let cloneIngredient = ingredientList.lastElementChild
+      console.log(cloneIngredient)
+      let newIngredientForm = cloneIngredient.cloneNode(true)
+      console.log(newIngredientForm)
+      newIngredientForm.querySelectorAll('input').forEach(function(element){
+        element.value = ''
+      })
+      // remove all existing error fields in the new ingredient row
+      newIngredientForm.querySelectorAll('.errorlist').forEach(function(item){
+        item.remove();
+      })
+      console.log(newIngredientForm)
+      ingredientList.appendChild(newIngredientForm)
+    })
+
+    // Use Event Delegation to listen for 'click' events on dynamically added 'delete' buttons.
+    ingredientList.addEventListener('click', function(event){
+      console.log(this)
+      console.log(event)
+      console.log(event.target.classList.contains('delete-recipe-ingredient'))
+      if (event.target.classList.contains('delete-recipe-ingredient')){
+        // Check if this is the only ingredient remaining
+        console.log(ingredientList.children.length)
+        ingredientRow = event.target.parentElement.parentElement
+        console.log(ingredientRow)
+        if (ingredientList.children.length === 1) {
+          ingredientRow.querySelectorAll('input').forEach(function(element){
+            element.value = ''
+          })
+          // remove all existing error fields
+          ingredientRow.querySelectorAll('.errorlist').forEach(function(item){
+            item.remove();
+          })
+        } else {
+          ingredientRow.remove()
+        }
+      }
+    })
+
+
+    /* INSTRUCTIONS INPUT FUNCTIONALITY SECTION */
+
+    let addStepBtn = document.getElementById('add-step')
+    let instructionList = document.getElementById('instructions-list')
+
+    addStepBtn.addEventListener('click', function() {
+      let instructionToClone = instructionList.lastElementChild
+      console.log(instructionToClone)
+      let clonedInstructionForm = instructionToClone.cloneNode(true)
+      console.log(clonedInstructionForm)
+      // Reset the form
+      clonedInstructionForm.querySelectorAll('textarea').forEach(function(element){
+        element.value = ''
+      })
+      instructionList.appendChild(clonedInstructionForm)
+    })
+
+
+    // Use Event Delegation to listen for 'click' events on dynamically added 'delete' buttons.
+    instructionList.addEventListener('click', function(event){
+      console.log(this)
+      console.log(event)
+      console.log(event.target.classList.contains('delete-instruction'))
+      if (event.target.classList.contains('delete-instruction')){
+        // Check if this is the only instruction remaining (if it is, just reset the form)
+        console.log(instructionList.children.length)
+        instructionRow = event.target.parentElement.parentElement.parentElement
+        console.log(instructionRow)
+        if (instructionList.children.length === 1) {
+          instructionRow.querySelectorAll('textarea').forEach(function(element){
+            element.value = ''
+          })
+        } else {
+          instructionRow.remove()
+        }
+      }
+    })
+
+  })
+</script>
+{% endblock %}
